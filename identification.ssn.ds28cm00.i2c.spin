@@ -5,11 +5,11 @@
     Description: Driver for the DS28CM00 64-bit I2C Silicon Serial Number
     Copyright (c) 2019
     Started Feb 16, 2019
-    Updated Mar 16, 2019
+    Updated May 12, 2019
     See end of file for terms of use.
     --------------------------------------------
     NOTE: This driver will start successfully if the Propeller's EEPROM is on
-        the chosen I2C bus and return data from the EEPROM!
+        the chosen I2C bus and will return data from the EEPROM!
 }
 
 CON
@@ -33,6 +33,7 @@ OBJ
     i2c : "com.i2c"
     core: "core.con.ds28cm00"
     time: "time"
+    crcs: "math.crc"
 
 PUB Null
 ''This is not a top-level object
@@ -72,6 +73,13 @@ PUB CRC
 ' Read the CRC byte from the chip
 ' NOTE: The CRC is of the first 56-bits of the ROM (8 bits Device Family Code + 48 bits Serial Number)
     readRegX(core#CRC, 1, @result)
+
+PUB CRCValid | tmp[2]
+' Test CRC returned from chip for equality with calculated CRC
+'   Returns TRUE if CRC is valid, FALSE otherwise
+    tmp := 0
+    readRegX(core#DEV_FAMILY, 7, @tmp)
+    return (CRC == crcs.DallasMaximCRC8 (@tmp, 7))
 
 PUB DeviceFamily
 ' Reads the Device Family Code

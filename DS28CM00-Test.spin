@@ -18,8 +18,8 @@ CON
     _clkmode    = cfg#_clkmode
     _xinfreq    = cfg#_xinfreq
 
-    SCL_PIN     = 28
-    SDA_PIN     = 29
+    SCL_PIN     = 26
+    SDA_PIN     = 27
     I2C_HZ      = 400_000
 
 OBJ
@@ -46,6 +46,11 @@ PUB Main | i
         ser.Hex (_sn.byte[i], 2)
     ser.Str (string(ser#NL, "CRC: $"))
     ser.Hex (ssn.CRC, 2)
+    ser.Str (string(", Valid: "))
+    case ssn.CRCValid
+        TRUE: ser.Str (string("Yes"))
+        FALSE: ser.Str (string("No"))
+        OTHER: ser.Str (string("EXCEPTION"))
     ser.Str (string(ser#NL, "Halting"))
     Flash (cfg#LED1)
 
