@@ -32,7 +32,7 @@ OBJ
 VAR
 
     byte _ser_cog
-    byte _sn[6]
+    byte _sn[8]
 
 PUB Main | i
 
@@ -42,7 +42,7 @@ PUB Main | i
     ser.Hex (ssn.DeviceFamily, 2)
     ser.Str (string(ser#NL, "Serial Number: $"))
     ssn.SN (@_sn)
-    repeat i from 0 to 5
+    repeat i from 0 to 7
         ser.Hex (_sn.byte[i], 2)
     ser.Str (string(ser#NL, "CRC: $"))
     ser.Hex (ssn.CRC, 2)

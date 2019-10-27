@@ -86,10 +86,10 @@ PUB DeviceFamily
 '   Returns $70
     readRegX(core#DEV_FAMILY, 1, @result)
 
-PUB SN(buf_addr)
-' Reads the unique 48-bit serial number into buffer at address buf_addr
-' NOTE: This buffer must be 6 bytes in length.
-    readRegX(core#SN_0_7, 6, buf_addr)
+PUB SN(buff_addr)
+' Reads the unique 64-bit serial number into buffer at address buff_addr
+' NOTE: This buffer must be 8 bytes in length.
+    readRegX(core#DEV_FAMILY, 8, buff_addr)
 
 PRI readRegX(reg, bytes, dest) | cmd_packet
 
