@@ -1,10 +1,10 @@
 {
     --------------------------------------------
-    Filename: DS28CM00-Test.spin
+    Filename: DS28CM00-Test-tiny.spin
     Author: Jesse Burt
-    Description: Demo of the DS28CM00 64-bit ROM ID chip
+    Description: Demo of the DS28CM00 64-bit ROM ID chip (SPIN-only version)
     Copyright (c) 2019
-    Started Feb 16, 2019
+    Started Oct 27, 2019
     Updated Oct 27, 2019
     See end of file for terms of use.
     --------------------------------------------
@@ -18,16 +18,16 @@ CON
     _clkmode    = cfg#_clkmode
     _xinfreq    = cfg#_xinfreq
 
+    LED         = cfg#LED1
     SCL_PIN     = 26
     SDA_PIN     = 27
-    I2C_HZ      = 400_000
 
 OBJ
 
     cfg     : "core.con.boardcfg.flip"
     ser     : "com.serial.terminal"
     time    : "time"
-    ssn     : "identification.ssn.ds28cm00.i2c"
+    ssn     : "tiny.identification.ssn.ds28cm00.i2c"
 
 VAR
 
@@ -52,27 +52,28 @@ PUB Main | i
         FALSE: ser.Str (string("No"))
         OTHER: ser.Str (string("EXCEPTION"))
     ser.Str (string(ser#NL, "Halting"))
-    Flash (cfg#LED1)
+    Flash (cfg#LED1, 100)
 
 PUB Setup
 
     repeat until ser.Start (115_200)
     ser.Clear
     ser.Str(string("Serial terminal started", ser#NL))
-    if ssn.Startx (SCL_PIN, SDA_PIN, I2C_HZ)
+    if ssn.Startx (SCL_PIN, SDA_PIN)
         ser.Str (string("DS28CM00 driver started", ser#NL))
     else
         ser.Str (string("DS28CM00 driver failed to start - halting", ser#NL))
         ssn.Stop
-        time.MSleep (1)
+        time.MSleep (500)
         ser.Stop
+        Flash (LED, 500)
 
-PUB Flash(led_pin)
+PUB Flash(led_pin, delay_ms)
 
     dira[led_pin] := 1
     repeat
         !outa[led_pin]
-        time.MSleep (100)
+        time.MSleep (delay_ms)
 
 DAT
 {
