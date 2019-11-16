@@ -1,11 +1,11 @@
 # ds28cm00-spin 
 ---------------
 
-This is a P8X32A/Propeller driver object for the Maxim DS28CM00 I2C/SMBus Silicon Serial Number.
+This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for the Maxim DS28CM00 I2C/SMBus Silicon Serial Number.
 
 ## Salient Features
 
-* Operates at up to 400kHz
+* I2C connection at up to 400kHz
 * Reads the 8-bit family code
 * Reads the entire 64-bit serial number
 * Reads the 8-bit CRC
@@ -15,10 +15,12 @@ This is a P8X32A/Propeller driver object for the Maxim DS28CM00 I2C/SMBus Silico
 
 * PASM version: Requires 1 extra core/cog for the PASM I2C driver
 * SPIN version: none
+* P2: N/A
 
 ## Compiler compatibility
 
-- [x] OpenSpin (tested with 1.00.81)
+- P1/Spin1: OpenSpin (tested with 1.00.81)
+- P2/Spin2: FastSpin (tested with 4.0.3-beta)
 
 ## Limitations
 
@@ -28,4 +30,4 @@ This is a P8X32A/Propeller driver object for the Maxim DS28CM00 I2C/SMBus Silico
 ## TODO
 
 - [x] Implement CRC verification
-- [x] Implement separate version that uses SPIN I2C driver. Depending on users' needs, the PASM I2C driver may be overkill
+- [x] Implement separate version that uses SPIN (P1 bytecode version) I2C driver. Depending on users' needs, the PASM I2C driver may be overkill
