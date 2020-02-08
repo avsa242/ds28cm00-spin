@@ -3,9 +3,9 @@
     Filename: DS28CM00-Demo.spin
     Author: Jesse Burt
     Description: Demo of the DS28CM00 64-bit ROM ID chip
-    Copyright (c) 2019
+    Copyright (c) 2020
     Started Feb 16, 2019
-    Updated Oct 27, 2019
+    Updated Feb 7, 2020
     See end of file for terms of use.
     --------------------------------------------
     NOTE: The driver will start successfully if the Propeller's EEPROM is on
@@ -18,6 +18,11 @@ CON
     _clkmode    = cfg#_clkmode
     _xinfreq    = cfg#_xinfreq
 
+    LED         = cfg#LED1
+    SER_RX      = 31
+    SER_TX      = 30
+    SER_BAUD    = 115_200
+
     SCL_PIN     = 26
     SDA_PIN     = 27
     I2C_HZ      = 400_000
@@ -27,6 +32,7 @@ OBJ
     cfg     : "core.con.boardcfg.flip"
     ser     : "com.serial.terminal"
     time    : "time"
+    io      : "io"
     ssn     : "identification.ssn.ds28cm00.i2c"
 
 VAR
@@ -40,39 +46,35 @@ PUB Main | i
     ser.NewLine
     ser.Str (string("Device Family: $"))
     ser.Hex (ssn.DeviceFamily, 2)
-    ser.Str (string(ser#NL, "Serial Number: $"))
+    ser.Str (string(ser#NL, ser#LF, "Serial Number: $"))
     ssn.SN (@_sn)
     repeat i from 0 to 7
         ser.Hex (_sn.byte[i], 2)
-    ser.Str (string(ser#NL, "CRC: $"))
+    ser.Str (string(ser#NL, ser#LF, "CRC: $"))
     ser.Hex (ssn.CRC, 2)
     ser.Str (string(", Valid: "))
     case ssn.CRCValid
         TRUE: ser.Str (string("Yes"))
         FALSE: ser.Str (string("No"))
-        OTHER: ser.Str (string("EXCEPTION"))
-    ser.Str (string(ser#NL, "Halting"))
-    Flash (cfg#LED1)
+    ser.Str (string(ser#NL, ser#LF, "Halting"))
+    FlashLED (LED, 100)
 
 PUB Setup
 
-    repeat until ser.Start (115_200)
+    repeat until ser.StartRXTX(SER_RX, SER_TX, 0, SER_BAUD)
+    time.MSleep(30)
     ser.Clear
-    ser.Str(string("Serial terminal started", ser#NL))
+    ser.Str(string("Serial terminal started", ser#NL, ser#LF))
     if ssn.Startx (SCL_PIN, SDA_PIN, I2C_HZ)
-        ser.Str (string("DS28CM00 driver started", ser#NL))
+        ser.Str (string("DS28CM00 driver started", ser#NL, ser#LF))
     else
-        ser.Str (string("DS28CM00 driver failed to start - halting", ser#NL))
+        ser.Str (string("DS28CM00 driver failed to start - halting", ser#NL, ser#LF))
         ssn.Stop
-        time.MSleep (1)
+        time.MSleep (5)
         ser.Stop
+        FlashLED(LED, 500)
 
-PUB Flash(led_pin)
-
-    dira[led_pin] := 1
-    repeat
-        !outa[led_pin]
-        time.MSleep (100)
+#include "lib.utility.spin"
 
 DAT
 {
