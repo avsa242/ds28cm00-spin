@@ -5,12 +5,12 @@
     Description: Demo of the DS28CM00 64-bit ROM ID chip
     Copyright (c) 2020
     Started Feb 16, 2019
-    Updated Feb 7, 2020
+    Updated Jun 24, 2020
     See end of file for terms of use.
     --------------------------------------------
-    NOTE: The driver will start successfully if the Propeller's EEPROM is on
-        the chosen I2C bus and return data from the EEPROM! Make sure the EEPROM is
-        somehow disabled or test the chip using different I/O pins.
+    NOTE: If a common EEPROM (e.g. AT24Cxxxx) is on the same I2C bus as the SSN,
+        the driver may return data from it instead of the SSN. Make sure the EEPROM is
+        somehow disabled or test the SSN using different I/O pins.
 }
 
 CON
@@ -30,7 +30,7 @@ CON
 OBJ
 
     cfg     : "core.con.boardcfg.flip"
-    ser     : "com.serial.terminal"
+    ser     : "com.serial.terminal.ansi"
     time    : "time"
     io      : "io"
     ssn     : "identification.ssn.ds28cm00.i2c"
@@ -45,18 +45,18 @@ PUB Main | i
     Setup
     ser.NewLine
     ser.Str (string("Device Family: $"))
-    ser.Hex (ssn.DeviceFamily, 2)
-    ser.Str (string(ser#NL, ser#LF, "Serial Number: $"))
+    ser.Hex (ssn.DeviceID, 2)
+    ser.Str (string(ser#CR, ser#LF, "Serial Number: $"))
     ssn.SN (@_sn)
     repeat i from 0 to 7
         ser.Hex (_sn.byte[i], 2)
-    ser.Str (string(ser#NL, ser#LF, "CRC: $"))
+    ser.Str (string(ser#CR, ser#LF, "CRC: $"))
     ser.Hex (ssn.CRC, 2)
     ser.Str (string(", Valid: "))
     case ssn.CRCValid
         TRUE: ser.Str (string("Yes"))
         FALSE: ser.Str (string("No"))
-    ser.Str (string(ser#NL, ser#LF, "Halting"))
+    ser.Str (string(ser#CR, ser#LF, "Halting"))
     FlashLED (LED, 100)
 
 PUB Setup
@@ -64,11 +64,11 @@ PUB Setup
     repeat until ser.StartRXTX(SER_RX, SER_TX, 0, SER_BAUD)
     time.MSleep(30)
     ser.Clear
-    ser.Str(string("Serial terminal started", ser#NL, ser#LF))
+    ser.Str(string("Serial terminal started", ser#CR, ser#LF))
     if ssn.Startx (SCL_PIN, SDA_PIN, I2C_HZ)
-        ser.Str (string("DS28CM00 driver started", ser#NL, ser#LF))
+        ser.Str (string("DS28CM00 driver started", ser#CR, ser#LF))
     else
-        ser.Str (string("DS28CM00 driver failed to start - halting", ser#NL, ser#LF))
+        ser.Str (string("DS28CM00 driver failed to start - halting", ser#CR, ser#LF))
         ssn.Stop
         time.MSleep (5)
         ser.Stop
