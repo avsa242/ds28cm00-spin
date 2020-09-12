@@ -1,16 +1,16 @@
 {
     --------------------------------------------
-    Filename: DS28CM00-Test-tiny.spin
+    Filename: DS28CM00-Demo-tiny.spin
     Author: Jesse Burt
     Description: Demo of the DS28CM00 64-bit ROM ID chip (SPIN-only version)
-    Copyright (c) 2019
+    Copyright (c) 2020
     Started Oct 27, 2019
-    Updated Oct 27, 2019
+    Updated Sep 12, 2020
     See end of file for terms of use.
     --------------------------------------------
-    NOTE: The driver will start successfully if the Propeller's EEPROM is on
-        the chosen I2C bus and return data from the EEPROM! Make sure the EEPROM is
-        somehow disabled or test the chip using different I/O pins.
+    NOTE: If a common EEPROM (e.g. AT24Cxxxx) is on the same I2C bus as the SSN,
+        the driver may return data from it instead of the SSN. Make sure the EEPROM is
+        somehow disabled or test the SSN using different I/O pins.
 }
 
 CON
@@ -18,62 +18,62 @@ CON
     _clkmode    = cfg#_clkmode
     _xinfreq    = cfg#_xinfreq
 
+' -- User-modifiable constants
     LED         = cfg#LED1
-    SCL_PIN     = 26
-    SDA_PIN     = 27
+    SER_RX      = 31
+    SER_TX      = 30
+    SER_BAUD    = 115_200
+
+    SCL_PIN     = 24
+    SDA_PIN     = 25
+' --
 
 OBJ
 
     cfg     : "core.con.boardcfg.flip"
-    ser     : "com.serial.terminal"
+    ser     : "com.serial.terminal.ansi"
     time    : "time"
-    ssn     : "tiny.identification.ssn.ds28cm00.i2c"
+    io      : "io"
+    ssn     : "tiny.id.ssn.ds28cm00.i2c"
 
 VAR
 
     byte _ser_cog
     byte _sn[8]
 
-PUB Main | i
+PUB Main{} | i
 
-    Setup
-    ser.NewLine
-    ser.Str (string("Device Family: $"))
-    ser.Hex (ssn.DeviceFamily, 2)
-    ser.Str (string(ser#NL, "Serial Number: $"))
-    ssn.SN (@_sn)
+    setup{}
+    ser.newline{}
+    ser.str(string("Device Family: $"))
+    ser.hex(ssn.DeviceID, 2)
+    ser.str(string(ser#CR, ser#LF, "Serial Number: $"))
+    ssn.sn(@_sn)
     repeat i from 0 to 7
-        ser.Hex (_sn.byte[i], 2)
-    ser.Str (string(ser#NL, "CRC: $"))
-    ser.Hex (ssn.CRC, 2)
-    ser.Str (string(", Valid: "))
-    case ssn.CRCValid
-        TRUE: ser.Str (string("Yes"))
-        FALSE: ser.Str (string("No"))
-        OTHER: ser.Str (string("EXCEPTION"))
-    ser.Str (string(ser#NL, "Halting"))
-    Flash (cfg#LED1, 100)
+        ser.hex(_sn.byte[i], 2)
+    ser.str(string(ser#CR, ser#LF, "CRC: $"))
+    ser.hex(ssn.crc{}, 2)
+    ser.str(string(", Valid: "))
+    case ssn.crcvalid{}
+        true: ser.str(string("Yes"))
+        false: ser.str(string("No"))
 
-PUB Setup
-
-    repeat until ser.Start (115_200)
-    ser.Clear
-    ser.Str(string("Serial terminal started", ser#NL))
-    if ssn.Startx (SCL_PIN, SDA_PIN)
-        ser.Str (string("DS28CM00 driver started", ser#NL))
-    else
-        ser.Str (string("DS28CM00 driver failed to start - halting", ser#NL))
-        ssn.Stop
-        time.MSleep (500)
-        ser.Stop
-        Flash (LED, 500)
-
-PUB Flash(led_pin, delay_ms)
-
-    dira[led_pin] := 1
+    ser.str(string(ser#CR, ser#LF, "Halting"))
     repeat
-        !outa[led_pin]
-        time.MSleep (delay_ms)
+
+PUB Setup{}
+
+    repeat until ser.startrxtx(SER_RX, SER_TX, 0, SER_BAUD)
+    time.msleep(30)
+    ser.clear{}
+    ser.str(string("Serial terminal started", ser#CR, ser#LF))
+    if ssn.startx(SCL_PIN, SDA_PIN)
+        ser.str(string("DS28CM00 driver started", ser#CR, ser#LF))
+    else
+        ser.str(string("DS28CM00 driver failed to start - halting", ser#CR, ser#LF))
+        ssn.stop{}
+        time.msleep (5)
+        ser.stop{}
 
 DAT
 {

@@ -1,78 +1,76 @@
 {
     --------------------------------------------
-    Filename: DS28CM00-Test.spin
+    Filename: DS28CM00-Demo.spin2
     Author: Jesse Burt
-    Description: Demo of the DS28CM00 64-bit ROM ID chip
-    Copyright (c) 2019
-    Started Feb 16, 2019
-    Updated Oct 27, 2019
+    Description: Demo of the DS28CM00 64-bit ROM ID chip (P2 version)
+    Copyright (c) 2020
+    Started Oct 27, 2019
+    Updated Sep 12, 2020
     See end of file for terms of use.
     --------------------------------------------
-    NOTE: The driver will start successfully if the Propeller's EEPROM is on
-        the chosen I2C bus and return data from the EEPROM! Make sure the EEPROM is
-        somehow disabled or test the chip using different I/O pins.
+    NOTE: If a common EEPROM (e.g. AT24Cxxxx) is on the same I2C bus as the SSN,
+        the driver may return data from it instead of the SSN. Make sure the EEPROM is
+        somehow disabled or test the SSN using different I/O pins.
 }
 
 CON
 
-    _clkmode    = cfg#_clkmode
-    _xinfreq    = cfg#_xinfreq
+    _clkfreq    = cfg#_clkfreq_def
+    _xtlfreq    = cfg#_xtlfreq
 
-    SCL_PIN     = 26
-    SDA_PIN     = 27
+' -- User-modifiable constants
+    LED         = cfg#LED1
+    SER_RX      = cfg#SER_RX
+    SER_TX      = cfg#SER_TX
+    SER_BAUD    = 2_000_000
+
+    I2C_SCL     = 24
+    I2C_SDA     = 25
     I2C_HZ      = 400_000
+' --
 
 OBJ
 
-    cfg     : "core.con.boardcfg.flip"
-    ser     : "com.serial.terminal"
+    cfg     : "core.con.boardcfg.p2eval"
+    ser     : "com.serial.terminal.ansi"
     time    : "time"
-    ssn     : "identification.ssn.ds28cm00.i2c"
+    io      : "io"
+    ssn     : "id.ssn.ds28cm00.i2c"
 
 VAR
 
     byte _ser_cog
     byte _sn[8]
 
-PUB Main | i
+PUB Main() | i
 
-    Setup
-    ser.NewLine
-    ser.Str (string("Device Family: $"))
-    ser.Hex (ssn.DeviceFamily, 2)
-    ser.Str (string(ser#NL, "Serial Number: $"))
-    ssn.SN (@_sn)
+    setup()
+    ser.newline()
+    ser.printf("Device Family: $")
+    ser.hex(ssn.deviceid(), 2)
+    ser.printf("\nSerial Number: $")
+    ssn.sn(@_sn)
     repeat i from 0 to 7
-        ser.Hex (_sn.byte[i], 2)
-    ser.Str (string(ser#NL, "CRC: $"))
-    ser.Hex (ssn.CRC, 2)
-    ser.Str (string(", Valid: "))
-    case ssn.CRCValid
-        TRUE: ser.Str (string("Yes"))
-        FALSE: ser.Str (string("No"))
-        OTHER: ser.Str (string("EXCEPTION"))
-    ser.Str (string(ser#NL, "Halting"))
-    Flash (cfg#LED1)
+        ser.hex(_sn.byte[i], 2)
+    ser.printf("\nCRC: $%x, Valid: ", ssn.crc())
+    case ssn.crcvalid()
+        true: ser.printf("Yes\n")
+        false: ser.printf("No\n")
 
-PUB Setup
-
-    repeat until ser.Start (115_200)
-    ser.Clear
-    ser.Str(string("Serial terminal started", ser#NL))
-    if ssn.Startx (SCL_PIN, SDA_PIN, I2C_HZ)
-        ser.Str (string("DS28CM00 driver started", ser#NL))
-    else
-        ser.Str (string("DS28CM00 driver failed to start - halting", ser#NL))
-        ssn.Stop
-        time.MSleep (1)
-        ser.Stop
-
-PUB Flash(led_pin)
-
-    dira[led_pin] := 1
+    ser.printf("Halting")
     repeat
-        !outa[led_pin]
-        time.MSleep (100)
+
+PUB Setup()
+
+    repeat until ser.startrxtx(SER_RX, SER_TX, 0, SER_BAUD)
+    waitms(30)
+    ser.clear()
+    ser.printf("Serial terminal started\n")
+    if ssn.start(I2C_SCL, I2C_SDA, I2C_HZ)
+        ser.printf("DS28CM00 driver started\n")
+    else
+        ser.printf("DS28CM00 driver failed to start - halting\n")
+        ssn.stop()
 
 DAT
 {
