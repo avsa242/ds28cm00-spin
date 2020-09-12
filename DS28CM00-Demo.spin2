@@ -8,9 +8,9 @@
     Updated Sep 12, 2020
     See end of file for terms of use.
     --------------------------------------------
-    NOTE: The driver will start successfully if the Propeller's EEPROM is on
-        the chosen I2C bus and return data from the EEPROM! Make sure the EEPROM is
-        somehow disabled or test the chip using different I/O pins.
+    NOTE: If a common EEPROM (e.g. AT24Cxxxx) is on the same I2C bus as the SSN,
+        the driver may return data from it instead of the SSN. Make sure the EEPROM is
+        somehow disabled or test the SSN using different I/O pins.
 }
 
 CON
