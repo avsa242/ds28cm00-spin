@@ -13,8 +13,8 @@
 
 CON
 
-    SLAVE_WR        = core#SLAVE_ADDR
-    SLAVE_RD        = core#SLAVE_ADDR|1
+    SLAVE_WR        = core.SLAVE_ADDR
+    SLAVE_RD        = core.SLAVE_ADDR|1
 
     DEF_HZ          = 100_000
 
@@ -25,7 +25,6 @@ OBJ
 
     i2c : "com.i2c"
     core: "core.con.ds28cm00"
-    time: "time"
     crcs: "math.crc"
 
 PUB Null()
@@ -37,7 +36,7 @@ PUB Start(SCL_PIN, SDA_PIN, SCL_HZ=100_000): okay
         i2c.setup(SCL_PIN, SDA_PIN, SCL_HZ)             ' I2C Object Started?
         waitms(1)
         if i2c.present(SLAVE_WR)                        ' Response from device?
-            if deviceid() == core#DEVID_RESP
+            if deviceid() == core.DEVID_RESP
             return cogid()+1
 
     return FALSE                                        ' Something above went wrong
@@ -48,11 +47,11 @@ PUB CM(mode): curr_mode | cmd_pkt, tmp
 ' Set bus mode to I2C or SMBus
 '   Valid values: BUS_I2C (0) or BUS_SMBUS(1)
 '   Any other value polls the chip and returns the current setting
-    readreg(core#CTRL_REG, 1, @curr_mode)
+    readreg(core.CTRL_REG, 1, @curr_mode)
     case mode
         BUS_I2C, BUS_SMBUS:
             cmd_pkt.byte[0] := SLAVE_WR
-            cmd_pkt.byte[1] := core#CTRL_REG
+            cmd_pkt.byte[1] := core.CTRL_REG
             cmd_pkt.byte[2] := mode
         other:
             return
@@ -65,25 +64,25 @@ PUB CM(mode): curr_mode | cmd_pkt, tmp
 PUB CRC(): crcbyte
 ' Read the CRC byte from the chip
 ' NOTE: The CRC is of the first 56-bits of the ROM (8 bits Device Family Code + 48 bits Serial Number)
-    readreg(core#CRC, 1, @crcbyte)
+    readreg(core.CRC, 1, @crcbyte)
 
 PUB CRCValid(): valid | tmp[2]
 ' Test CRC returned from chip for equality with calculated CRC
 '   Returns TRUE if CRC is valid, FALSE otherwise
     tmp := 0
-    readreg(core#DEV_FAMILY, 7, @tmp)
-    return (CRC() == crcs.dallasmaximcrc8(@tmp, 7))
+    readreg(core.DEV_FAMILY, 7, @tmp)
+    return (crc() == crcs.dallasmaximcrc8(@tmp, 7))
 
 PUB DeviceID(): id
 ' Reads the Device ID (Family Code)
 '   Returns $70
     id := 0
-    readreg(core#DEV_FAMILY, 1, @id)
+    readreg(core.DEV_FAMILY, 1, @id)
 
 PUB SN(ptr_buff)
 ' Reads the unique 64-bit serial number into buffer at address ptr_buff
 ' NOTE: This buffer must be 8 bytes in length.
-    readreg(core#DEV_FAMILY, 8, ptr_buff)
+    readreg(core.DEV_FAMILY, 8, ptr_buff)
 
 PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
 ' Read nr_bytes from the slave device
