@@ -15,13 +15,13 @@
 
 CON
 
-    _clkfreq    = cfg#_clkfreq_def
-    _xtlfreq    = cfg#_xtlfreq
+    _clkfreq    = cfg._clkfreq_def
+    _xtlfreq    = cfg._xtlfreq
 
 ' -- User-modifiable constants
-    LED         = cfg#LED1
-    SER_RX      = cfg#SER_RX
-    SER_TX      = cfg#SER_TX
+    LED         = cfg.LED1
+    SER_RX      = cfg.SER_RX
+    SER_TX      = cfg.SER_TX
     SER_BAUD    = 2_000_000
 
     I2C_SCL     = 24
@@ -33,13 +33,10 @@ OBJ
 
     cfg     : "core.con.boardcfg.p2eval"
     ser     : "com.serial.terminal.ansi"
-    time    : "time"
-    io      : "io"
     ssn     : "id.ssn.ds28cm00.i2c"
 
 VAR
 
-    byte _ser_cog
     byte _sn[8]
 
 PUB Main() | i
