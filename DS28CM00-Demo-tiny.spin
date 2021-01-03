@@ -3,9 +3,9 @@
     Filename: DS28CM00-Demo-tiny.spin
     Author: Jesse Burt
     Description: Demo of the DS28CM00 64-bit ROM ID chip (SPIN-only version)
-    Copyright (c) 2020
+    Copyright (c) 2021
     Started Oct 27, 2019
-    Updated Sep 12, 2020
+    Updated Jan 2, 2021
     See end of file for terms of use.
     --------------------------------------------
     NOTE: If a common EEPROM (e.g. AT24Cxxxx) is on the same I2C bus as the SSN,
@@ -20,8 +20,6 @@ CON
 
 ' -- User-modifiable constants
     LED         = cfg#LED1
-    SER_RX      = 31
-    SER_TX      = 30
     SER_BAUD    = 115_200
 
     SCL_PIN     = 24
@@ -33,12 +31,10 @@ OBJ
     cfg     : "core.con.boardcfg.flip"
     ser     : "com.serial.terminal.ansi"
     time    : "time"
-    io      : "io"
     ssn     : "tiny.id.ssn.ds28cm00.i2c"
 
 VAR
 
-    byte _ser_cog
     byte _sn[8]
 
 PUB Main{} | i
@@ -46,10 +42,10 @@ PUB Main{} | i
     setup{}
     ser.newline{}
     ser.str(string("Device Family: $"))
-    ser.hex(ssn.DeviceID, 2)
+    ser.hex(ssn.deviceid{}, 2)
     ser.str(string(ser#CR, ser#LF, "Serial Number: $"))
     ssn.sn(@_sn)
-    repeat i from 0 to 7
+    repeat i from 7 to 0
         ser.hex(_sn.byte[i], 2)
     ser.str(string(ser#CR, ser#LF, "CRC: $"))
     ser.hex(ssn.crc{}, 2)
@@ -63,16 +59,16 @@ PUB Main{} | i
 
 PUB Setup{}
 
-    repeat until ser.startrxtx(SER_RX, SER_TX, 0, SER_BAUD)
+    ser.start(SER_BAUD)
     time.msleep(30)
     ser.clear{}
-    ser.str(string("Serial terminal started", ser#CR, ser#LF))
+    ser.strln(string("Serial terminal started"))
     if ssn.startx(SCL_PIN, SDA_PIN)
-        ser.str(string("DS28CM00 driver started", ser#CR, ser#LF))
+        ser.strln(string("DS28CM00 driver started"))
     else
-        ser.str(string("DS28CM00 driver failed to start - halting", ser#CR, ser#LF))
+        ser.strln(string("DS28CM00 driver failed to start - halting"))
         ssn.stop{}
-        time.msleep (5)
+        time.msleep(5)
         ser.stop{}
 
 DAT

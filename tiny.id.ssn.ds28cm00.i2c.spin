@@ -4,9 +4,9 @@
     Author: Jesse Burt
     Description: Driver for the DS28CM00
      64-bit I2C Silicon Serial Number (SPIN-based version)
-    Copyright (c) 2020
+    Copyright (c) 2021
     Started Oct 27, 2019
-    Updated Sep 12, 2020
+    Updated Jan 2, 2021
     See end of file for terms of use.
     --------------------------------------------
     NOTE: This driver will start successfully if the Propeller's EEPROM is on
@@ -35,19 +35,19 @@ PUB Null{}
 ' This is not a top-level object
 
 PUB Start{}: okay
-' Standard Propeller I2C pins and 400kHz
-    okay := startx (DEF_SCL, DEF_SDA)
+' Start using "standard" Propeller I2C pins
+    okay := startx(DEF_SCL, DEF_SDA)
 
 PUB Startx(SCL_PIN, SDA_PIN): okay
-
+' Start using custom settings
     if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31)
-        i2c.setupx(SCL_PIN, SDA_PIN)                    ' I2C Object Started?
+        i2c.setupx(SCL_PIN, SDA_PIN)
         time.msleep(1)
-        if i2c.present(SLAVE_WR)                        ' Response from device?
+        if i2c.present(SLAVE_WR)                ' check device bus presence
             if deviceid{} == core#DEVID_RESP
-            return cogid+1
+            return cogid+1                      ' no additional cog used
 
-    return FALSE                                        ' Something above went wrong
+    return FALSE                                ' something above went wrong
 
 PUB Stop{}
 
@@ -92,26 +92,22 @@ PUB SN(ptr_buff)
 ' NOTE: This buffer must be 8 bytes in length.
     readreg(core#DEV_FAMILY, 8, ptr_buff)
 
-PRI readReg(reg, nr_bytes, ptr_buff) | cmd_pkt, tmp
-' Read nr_bytes from the slave device
-    case reg
+PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
+' Read nr_bytes from the slave device into ptr_buff
+    case reg_nr
         $00..$08:
         other:
             return
 
-    case nr_bytes
-        1..9:
-            cmd_pkt.byte[0] := SLAVE_WR
-            cmd_pkt.byte[1] := reg
-        other:
-            return
+    cmd_pkt.byte[0] := SLAVE_WR
+    cmd_pkt.byte[1] := reg_nr
 
     i2c.start{}
-    i2c.write(cmd_pkt.byte[0])
-    i2c.write(cmd_pkt.byte[1])
+    repeat tmp from 0 to 1
+        i2c.write(cmd_pkt.byte[tmp])
 
     i2c.start{}
-    i2c.write (SLAVE_RD)
+    i2c.write(SLAVE_RD)
     repeat tmp from 0 to nr_bytes-1
         byte[ptr_buff][tmp] := i2c.read(tmp == (nr_bytes-1))
     i2c.stop{}
