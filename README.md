@@ -17,7 +17,7 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for the Maxim D
 
 P1/SPIN1:
 * spin-standard-library
-* PASM version: Requires 1 extra core/cog for the PASM I2C driver
+* PASM version: Requires 1 extra core/cog for the PASM I2C engine
 * SPIN version: none
 
 P2/SPIN2:
@@ -25,8 +25,11 @@ P2/SPIN2:
 
 ## Compiler Compatibility
 
-* P1/SPIN1: OpenSpin (tested with 1.00.81)
-* P2/SPIN2: FlexSpin (tested with 5.0.0)
+* P1/SPIN1 OpenSpin (bytecode): Untested (deprecated)
+* P1/SPIN1 FlexSpin (bytecode): OK, tested with 5.9.7-beta
+* P1/SPIN1 FlexSpin (native): OK, tested with 5.9.7-beta
+* ~~P2/SPIN2 FlexSpin (nu-code): FTBFS, tested with 5.9.7-beta~~
+* P2/SPIN2 FlexSpin (native): OK, tested with 5.9.7-beta
 * ~~BST~~ (incompatible - no preprocessor)
 * ~~Propeller Tool~~ (incompatible - no preprocessor)
 * ~~PNut~~ (incompatible - no preprocessor)
@@ -36,7 +39,3 @@ P2/SPIN2:
 * Has the same slave address as commonly available EEPROMs, so care is needed to ensure you're reading from the SSN and not your EEPROM, as the driver may read bytes successfully from it as though it were the SSN chip! Disable your EEPROM somehow, or put this chip on a different set of I/O pins.
 * Can toggle the CM bit of the control register between SMBus or I2C mode, but doesn't actually handle anything differently.
 
-## TODO
-
-- [x] Implement CRC verification
-- [x] Implement separate version that uses SPIN (P1 bytecode version) I2C driver. Depending on users' needs, the PASM I2C driver may be overkill
