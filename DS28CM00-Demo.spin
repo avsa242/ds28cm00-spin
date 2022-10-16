@@ -5,7 +5,7 @@
     Description: Demo of the DS28CM00 64-bit ROM ID chip
     Copyright (c) 2022
     Started Oct 27, 2019
-    Updated Oct 8, 2022
+    Updated Oct 16, 2022
     See end of file for terms of use.
     --------------------------------------------
     NOTE: If a common EEPROM (e.g. AT24Cxxxx) is on the same I2C bus as the SSN,
@@ -29,7 +29,7 @@ CON
 
 OBJ
 
-    cfg     : "core.con.boardcfg.flip"
+    cfg     : "boardcfg.flip"
     ser     : "com.serial.terminal.ansi"
     time    : "time"
     ssn     : "id.ssn.ds28cm00"

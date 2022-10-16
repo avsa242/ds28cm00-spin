@@ -5,7 +5,7 @@
     Description: Driver for the DS28CM00 64-bit I2C Silicon Serial Number
     Copyright (c) 2022
     Started Oct 27, 2019
-    Updated Sep 20, 2022
+    Updated Oct 16, 2022
     See end of file for terms of use.
     --------------------------------------------
     NOTE: This driver will start successfully if the Propeller's EEPROM is on
@@ -86,7 +86,7 @@ PUB crc_valid{}: valid | tmp[2]
 '   Returns TRUE if CRC is valid, FALSE otherwise
     tmp := 0
     readreg(core#DEV_FAMILY, 7, @tmp)
-    return (crc{} == crcs.dallasmaximcrc8(@tmp, 7))
+    return (crc{} == crcs.dallas_maxim_crc8(@tmp, 7))
 
 PUB dev_id{}: id
 ' Reads the Device ID (Family Code)
