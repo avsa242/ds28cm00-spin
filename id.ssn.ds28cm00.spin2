@@ -1,55 +1,79 @@
 {
-    --------------------------------------------
-    Filename: id.ssn.ds28cm00.spin2
-    Author: Jesse Burt
-    Description: Driver for the DS28CM00 64-bit I2C Silicon Serial Number (P2 version)
-    Copyright (c) 2022
-    Started Oct 27, 2019
-    Updated Oct 16, 2022
-    See end of file for terms of use.
-    --------------------------------------------
+----------------------------------------------------------------------------------------------------
+    Filename:       id.ssn.ds28cm00.spin2
+    Description:    Driver for the DS28CM00 64-bit I2C Silicon Serial Number
+    Author:         Jesse Burt
+    Started:        Oct 27, 2019
+    Updated:        Oct 19, 2024
+    Copyright (c) 2024 - See end of file for terms of use.
+----------------------------------------------------------------------------------------------------
+
+    NOTE: This chip responds to the same slave address as common I2C EEPROMs
+    If it is placed on the same bus, it is likely to cause communication issues due to the conflict
 }
 
 CON
 
-    SLAVE_WR        = core.SLAVE_ADDR
-    SLAVE_RD        = core.SLAVE_ADDR|1
+    { default I/O settings; these can be overridden in the parent object }
+    SCL         = 0
+    SDA         = 1
+    I2C_FREQ    = 100_000
+    I2C_ADDR    = 0
 
-    DEF_HZ          = 100_000
 
-    BUS_I2C         = 0
-    BUS_SMBUS       = 1
+    SLAVE_WR    = core.SLAVE_ADDR
+    SLAVE_RD    = core.SLAVE_ADDR|1
+
+    BUS_I2C     = 0
+    BUS_SMBUS   = 1
+
 
 OBJ
 
-    i2c : "com.i2c"
-    core: "core.con.ds28cm00"
-    crcs: "math.crc"
+    i2c:    "com.i2c"                           ' I2C engine
+    core:   "core.con.ds28cm00"                 ' HW-specific constants
+    crcs:   "math.crc"                          ' CRC routines
+
 
 PUB null()
 ' This is not a top-level object
 
-PUB startx(SCL_PIN, SDA_PIN, I2C_HZ=DEF_HZ): status
-' Start using custom settings
-    if (lookdown(SCL_PIN: 0..63) and lookdown(SDA_PIN: 0..63) and I2C_HZ <= core.I2C_MAX_FREQ)
-        if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
+
+PUB start(): status
+' Start using default I/O settings
+    return startx(SCL, SDA, I2C_FREQ)
+
+
+PUB startx(SCL_PIN, SDA_PIN, I2C_HZ): status
+' Start the driver with custom I/O settings
+'   SCL_PIN:    I2C clock, 0..63
+'   SDA_PIN:    I2C data, 0..63
+'   I2C_HZ:     I2C clock speed (max official specification is 400_000 but is unenforced)
+'   Returns:
+'       cog ID+1 of I2C engine on success
+'       0 on failure
+    if ( lookdown(SCL_PIN: 0..63) and lookdown(SDA_PIN: 0..63) )
+        if ( status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ) )
             waitus(core.T_POR)
-            if (dev_id() == core.DEVID_RESP)
+            if ( dev_id() == core.DEVID_RESP )  ' verify this is actually a DS28CM00
                 return
     ' if this point is reached, something above failed
     ' Double check I/O pin assignments, connections, power
     ' Lastly - make sure you have at least one free core/cog
     return FALSE
 
+
 PUB stop()
 ' Stop the driver
     i2c.deinit()
 
-PUB bus_mode{}: mode
+
+PUB bus_mode(): m
 ' Get bus mode
 '   Returns: BUS_I2C (0) or BUS_SMBUS(1)
     mode := 0
-    readreg(core.CTRL_REG, 1, @mode)
+    readreg(core.CTRL_REG, 1, @m)
+
 
 PUB bus_set_mode(mode)
 ' Set bus mode to I2C or SMBus
@@ -62,17 +86,20 @@ PUB bus_set_mode(mode)
     i2c.wrblock_lsbf(@cmd_pkt, 3)
     i2c.stop()
 
-PUB crc(): crcbyte
+
+PUB crc(): c
 ' Read the CRC byte from the chip
 ' NOTE: The CRC is of the first 56-bits of the ROM (8 bits Device Family Code + 48 bits Serial Number)
-    readreg(core.CRC, 1, @crcbyte)
+    readreg(core.CRC, 1, @c)
 
-PUB crc_valid(): valid | tmp[2]
+
+PUB crc_valid(): v | tmp[2]
 ' Test CRC returned from chip for equality with calculated CRC
 '   Returns TRUE if CRC is valid, FALSE otherwise
     tmp := 0
     readreg(core.DEV_FAMILY, 7, @tmp)
-    return (crc() == crcs.dallas_maxim_crc8(@tmp, 7))
+    return ( crc() == crcs.dallas_maxim_crc8(@tmp, 7) )
+
 
 PUB dev_id(): id
 ' Reads the Device ID (Family Code)
@@ -80,10 +107,12 @@ PUB dev_id(): id
     id := 0
     readreg(core.DEV_FAMILY, 1, @id)
 
+
 PUB serial_num(ptr_buff)
 ' Reads the unique 64-bit serial number into buffer at address ptr_buff
 ' NOTE: This buffer must be 8 bytes in length.
     readreg(core.DEV_FAMILY, 8, ptr_buff)
+
 
 PRI readreg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Read nr_bytes from the slave device into ptr_buff
@@ -97,15 +126,15 @@ PRI readreg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 
     i2c.start()
     i2c.wrblock_lsbf(@cmd_pkt, 2)
-
     i2c.start()
     i2c.write(SLAVE_RD)
     i2c.rdblock_lsbf(ptr_buff, nr_bytes, i2c.NAK)
     i2c.stop()
 
+
 DAT
 {
-Copyright 2022 Jesse Burt
+Copyright 2024 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
